@@ -1,0 +1,137 @@
+---
+- name: Update hosts
+  import_playbook: update_hosts.yml
+
+- name: Prepare hosts
+  hosts: debian
+  ignore_unreachable: true
+  gather_facts: yes
+
+  tasks:
+    - name: Create vagrant user
+      user:
+        name: vagrant
+        shell: /bin/bash
+        # password: vagrant
+        password: '$6$wkhQhItofDV4N5e0$4naqH2UiDOEfqScSmTfUBA7FWfioJ7XKK1aTC9SUfQ10tzjH.l7Xzaf1zLO3eEQf7PI21YVUgJ/c0etUPK4Vm0'
+
+    - name: Add vagrant user to sudoers
+      community.general.sudoers:
+        name: vagrant
+        commands: ALL
+        nopassword: true
+        user: vagrant
+
+    - name: Add vagrant insecure key
+      authorized_key:
+        user: vagrant
+        state: present
+        key: https://raw.github.com/mitchellh/vagrant/master/keys/vagrant.pub
+
+    - name: Remove default image user
+      user:
+        name: "{{ 'debian' if ansible_distribution == 'Debian' else 'ubuntu' }}"
+        state: absent
+        remove: true
+
+    - name: Get the version of the running kernel
+      command: uname -r
+      register: uname
+      changed_when: false
+
+    - name: Install packages
+      apt:
+        name:
+          - gcc
+          - git
+          - rsync
+          - wget
+          - net-tools
+          - bind9-dnsutils
+          - build-essential
+          - dkms
+          - module-assistant
+          - "linux-headers-{{ uname.stdout }}"
+        state: present
+
+    - name: Check if guest tools are already installed
+      stat:
+        path: "/lib/modules/{{ uname.stdout }}/misc/vboxsf.ko"
+      register: vbox_tools_installed
+
+    - name: Mount Guest tools iso
+      ansible.posix.mount:
+        path: /mnt
+        src: /dev/sr0
+        fstype: iso9660
+        opts: ro
+        state: ephemeral
+      when: not vbox_tools_installed.stat.exists
+
+    - name: Install Guest tools
+      command: ./VBoxLinuxAdditions.run --nox11
+      args:
+        chdir: /mnt
+      changed_when: true
+      failed_when: guest_tools_installed.rc != 2
+      register: guest_tools_installed
+      when: not vbox_tools_installed.stat.exists
+
+    - name: Unmount Guest tools iso
+      ansible.posix.mount:
+        path: /mnt
+        state: unmounted
+      when: not vbox_tools_installed.stat.exists
+
+    - name: Ensure network interfaces use 'ethN' and disable ipv6
+      lineinfile:
+        path: /etc/default/grub
+        regexp: '^GRUB_CMDLINE_LINUX_DEFAULT='
+        line: 'GRUB_CMDLINE_LINUX_DEFAULT="net.ifnames=0 biosdevname=0 ipv6.disable_ipv6=1"'
+      register: needs_update_grub
+
+    - name: Update grub
+      command: update-grub
+      changed_when: true
+      when: needs_update_grub.changed
+
+    - name: Configure files
+      lineinfile:
+        path: "{{ item.file }}"
+        line: "{{ item.content }}"
+        create: true
+      loop:
+        - {content: 'net.ipv6.conf.all.disable_ipv6 = 1', file: '/etc/sysctl.conf'}
+        - {content: "{{ ansible_distribution | lower + '-' + ansible_distribution_release }}.localdomain", file: '/etc/hostname'}
+        - {content: "127.0.1.1 {{ ansible_distribution | lower + '-' + ansible_distribution_release }}.localdomain {{ ansible_distribution | lower + '-' + ansible_distribution_release }}", file: '/etc/hosts'}
+
+    - name: delete current netplan configurations
+      shell: rm -f /etc/netplan/*
+      changed_when: true
+
+    - name: Copy netplan new config
+      copy:
+        src: ./files/netplan.yml
+        dest: /etc/netplan/current.yaml
+        mode: 0600
+
+    - name: Clean up
+      shell: |
+        touch /etc/cloud/cloud-init.disabled
+        cat /dev/null > /root/.ssh/authorized_keys
+        rm -rf /root/.ansible
+        history -c && history -w
+      args:
+        executable: /bin/bash
+      changed_when: true
+
+    # According to Vagrant: Up and Running: “This fixes fragmentation issues with the underlying disk,
+    # which allows it to compress much more efficiently later.”
+    - name: Zero out the drive
+      shell: |
+        set +o history
+        dd if=/dev/zero of=/EMPTY bs=1M
+        rm -f /EMPTY
+      args:
+        executable: /bin/bash
+      changed_when: true

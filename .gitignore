@@ -1,0 +1,10 @@
+*.raw
+*.vdi
+*.iso
+**/.vagrant
+.venv
+**/test/
+*.box
+*.img
+ansible.log
+!/.env

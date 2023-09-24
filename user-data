@@ -1,0 +1,17 @@
+#cloud-config
+users:
+  - default
+  - name: root
+    ssh_authorized_keys:
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDCK59MZgigeVmFvjfAicyKpmRQ3ZspGM7zNLi6k368Gn4PQ0jVt1TDQTveEa9k+KgMc7B7JmgZqzGlVNkcxI+9n6cX/VP9gu0PRyTJrPsWbM1QDgF49M2utAxNFj+qJjPIMQZ3yqDEC/vv4KTzUt3rDTlU4wGRlE3knFCxPU7hT5WmZo8EuTRCUP/xJAQQYlfg5TJ9rhYmTeDqPFo4YDMyLihL72utG6L8Ed2IyM6kuCPG/aeS40mmkv395NYSGd5p8CdMs3fuPArX48mYdPm6X+MEk1Kz13Bopw1PN5JL8CqKgANGXZhYWt5AowjUuaTf5EeDjz25c7oFwBADq2x56fTfZkdnH7kHqCpgZv/+las7XXrbrHcAs8OTVoI3Oh7LvuJyxeUx4O6b0VTW1PH0m43P2ZfQyhZ7mmOo6KFq2f1dY04gr9FRU+qTcyJH4E2dPIXGQWv+faHvVYIMlPjuBo337H5I8qAOnprknn39HNJvQ136BhJKhmnQEIN6Dmk= devel
+chpasswd:
+  users:
+    - name: root
+      password: vagrant
+      type: text
+    - name: debian
+      password: vagrant
+      type: text
+  expire: False
+
+ssh_pwauth: True
