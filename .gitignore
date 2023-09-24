@@ -3,8 +3,8 @@
 *.iso
 **/.vagrant
 .venv
-**/test/
+**/test/*
+!**/test/.keep
 *.box
 *.img
 ansible.log
-!/.env
