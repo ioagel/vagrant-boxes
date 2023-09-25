@@ -41,13 +41,16 @@ case "$1" in
     echo -e "${RED}Need to set description and release it!${ENDCOLOR}"
     ;;
   *)
-    printf "\nSelect appropriate action:\n"
-    printf "      create_vm:  Create and run the virtualbox vm\n"
-    printf "     prepare_vm:  Prepare the vm using ansible\n"
-    printf "     create_box:  Convert the vm to a vagrant box\n"
-    printf "download_latest:  Download the latest debian 12 and ubuntu 22.04 images\n"
-    printf "          clean:  Destroy and remove the vm and it's resources\n"
-    echo "Usage: ./setup.sh <create_vm | prepare_vm | create_box | download_latest | clean>"
+    echo -e "\nSelect appropriate action:\n"
+    echo -e "      ${GREEN}create_vm${ENDCOLOR}:  Create and run the virtualbox vm (download the images before running this command)\n \
+     ubuntu 22.04:  ./setup.sh create_vm ubuntu22.04 ubuntu22.04/ubuntu-22.04-server-cloudimg-amd64.img\n \
+        debian 12:  ./setup.sh create_vm debian12 debian12/debian-12-generic-amd64.raw\n"
+    echo -e "     ${GREEN}prepare_vm${ENDCOLOR}:  Prepare the vm using ansible\n"
+    echo -e "     ${GREEN}create_box${ENDCOLOR}:  Convert the vm to a vagrant box: ./setup.sh create_box <debian12 | ubuntu22.04>\n"
+    echo -e "${GREEN}download_latest${ENDCOLOR}:  Download the latest debian 12 and ubuntu 22.04 images\n"
+    echo -e "          ${GREEN}clean${ENDCOLOR}:  Destroy and remove the vm and it's resources: ./setup.sh clean <debian12 | ubuntu22.04>\n"
+    echo -e "        ${GREEN}publish${ENDCOLOR}:  Publish the box to vagrant cloud (you need to be logged in): ./setup.sh publish <debian12 | ubuntu22.04>\n"
+    echo -e "Usage: ${GREEN}./setup.sh${ENDCOLOR} <create_vm | prepare_vm | create_box | download_latest | clean | publish>"
     exit 1
     ;;
 esac
