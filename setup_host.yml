@@ -1,9 +1,9 @@
 ---
-- name: Update hosts
-  import_playbook: update_hosts.yml
+- name: Update boxes
+  import_playbook: update_boxes.yml
 
 - name: Prepare hosts
-  hosts: debian
+  hosts: boxes
   ignore_unreachable: true
   gather_facts: yes
 
@@ -13,6 +13,7 @@
         name: vagrant
         shell: /bin/bash
         # password: vagrant
+        # yamllint disable rule:line-length
         password: '$6$wkhQhItofDV4N5e0$4naqH2UiDOEfqScSmTfUBA7FWfioJ7XKK1aTC9SUfQ10tzjH.l7Xzaf1zLO3eEQf7PI21YVUgJ/c0etUPK4Vm0'
 
     - name: Add vagrant user to sudoers
@@ -34,6 +35,31 @@
         state: absent
         remove: true
 
+    - name: Configure files
+      lineinfile:
+        path: "{{ item.file }}"
+        line: "{{ item.content }}"
+        regexp: "{{ item.regexp }}"
+        create: true
+        mode: 0644
+      loop: "{{ file_configuration }}"
+      register: needs_update_grub
+
+    - name: Update grub
+      command: update-grub
+      changed_when: true
+      when: needs_update_grub.changed
+
+    - name: Delete current netplan configurations
+      shell: rm -f /etc/netplan/*
+      changed_when: true
+
+    - name: Copy netplan new config
+      copy:
+        src: ./files/netplan.yml
+        dest: /etc/netplan/01-netcfg.yaml
+        mode: 0600
+
     - name: Get the version of the running kernel
       command: uname -r
       register: uname
@@ -42,7 +68,6 @@
     - name: Install packages
       apt:
         name:
-          - gcc
           - git
           - rsync
           - wget
@@ -50,9 +75,9 @@
           - bind9-dnsutils
           - build-essential
           - dkms
-          - module-assistant
           - "linux-headers-{{ uname.stdout }}"
         state: present
+        update_cache: true
 
     - name: Check if guest tools are already installed
       stat:
@@ -83,46 +108,35 @@
         state: unmounted
       when: not vbox_tools_installed.stat.exists
 
-    - name: Ensure network interfaces use 'ethN' and disable ipv6
-      lineinfile:
-        path: /etc/default/grub
-        regexp: '^GRUB_CMDLINE_LINUX_DEFAULT='
-        line: 'GRUB_CMDLINE_LINUX_DEFAULT="net.ifnames=0 biosdevname=0 ipv6.disable_ipv6=1"'
-      register: needs_update_grub
-
-    - name: Update grub
-      command: update-grub
-      changed_when: true
-      when: needs_update_grub.changed
-
-    - name: Configure files
-      lineinfile:
-        path: "{{ item.file }}"
-        line: "{{ item.content }}"
-        create: true
-      loop:
-        - {content: 'net.ipv6.conf.all.disable_ipv6 = 1', file: '/etc/sysctl.conf'}
-        - {content: "{{ ansible_distribution | lower + '-' + ansible_distribution_release }}.localdomain", file: '/etc/hostname'}
-        - {content: "127.0.1.1 {{ ansible_distribution | lower + '-' + ansible_distribution_release }}.localdomain {{ ansible_distribution | lower + '-' + ansible_distribution_release }}", file: '/etc/hosts'}
-
-    - name: delete current netplan configurations
-      shell: rm -f /etc/netplan/*
-      changed_when: true
-
-    - name: Copy netplan new config
+    - name: Copy scripts
       copy:
-        src: ./files/netplan.yml
-        dest: /etc/netplan/current.yaml
-        mode: 0600
+        src: "{{ inventory_hostname }}/scripts/{{ item }}"
+        dest: "/root/{{ item }}"
+        mode: 0755
+      loop:
+        - motd.sh
+        - cleanup.sh
 
-    - name: Clean up
+    - name: Run scripts
+      shell: "./{{ item }}"
+      args:
+        executable: /bin/bash
+        chdir: /root
+      changed_when: true
+      loop:
+        - motd.sh
+        - cleanup.sh
+
+    - name: Clean up root user
       shell: |
-        touch /etc/cloud/cloud-init.disabled
-        cat /dev/null > /root/.ssh/authorized_keys
-        rm -rf /root/.ansible
+        cat /dev/null > .ssh/authorized_keys
+        rm -f *.sh
+        rm -rf .ansible/
+        rm -rf snap/
         history -c && history -w
       args:
         executable: /bin/bash
+        chdir: /root
       changed_when: true
 
     # According to Vagrant: Up and Running: “This fixes fragmentation issues with the underlying disk,

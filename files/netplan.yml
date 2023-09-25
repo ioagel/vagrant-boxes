@@ -1,6 +1,6 @@
 network:
+  version: 2
   ethernets:
     eth0:
       link-local: [ipv4]
       dhcp4: true
-  version: 2

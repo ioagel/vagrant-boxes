@@ -1,0 +1,22 @@
+---
+ignore: |
+  .venv/
+  *.sops.yml
+  *.sops.yaml
+  netplan.yml
+
+extends: default
+
+yaml-files:
+  - "*.yaml"
+  - "*.yml"
+  - ".yamllint"
+
+rules:
+  line-length:
+    max: 120
+    level: warning
+  truthy:
+    allowed-values: ["true", "false", "yes", "no", "on"]
+  comments:
+    min-spaces-from-content: 1

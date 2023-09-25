@@ -1,0 +1,29 @@
+---
+exclude_paths:
+  # default paths
+  - ".venv/"
+  - ".cache/"
+  - ".github/"
+  - "*.sops.yml"
+  - "*.sops.yaml"
+  - "netplan.yml"
+
+  # The "converge" and "reset" playbooks use import_playbook in
+  # conjunction with the "env" lookup plugin, which lets the
+  # syntax check of ansible-lint fail.
+  - "molecule/**/converge.yml"
+  - "molecule/**/prepare.yml"
+  - "molecule/**/reset.yml"
+  - "molecule/**/molecule.yml"
+  - "molecule/**/verify.yml"
+  - "molecule/**/common-overrides.yml"
+
+skip_list:
+  - risky-shell-pipe
+  - fqcn[action-core]
+  - fqcn[keyword]
+  - fqcn[action]
+  - role-name[path]
+  - template-instead-of-copy
+  - command-instead-of-module
+  - no-handler

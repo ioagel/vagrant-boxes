@@ -1,0 +1,18 @@
+---
+file_configuration:
+  - file: /etc/default/grub
+    content: 'GRUB_CMDLINE_LINUX="net.ifnames=0 biosdevname=0 ipv6.disable_ipv6=1 consoleblank=0"'
+    regexp: '^GRUB_CMDLINE_LINUX='
+  - file: /etc/default/grub
+    content: 'GRUB_CMDLINE_LINUX_DEFAULT="net.ifnames=0 biosdevname=0 ipv6.disable_ipv6=1 quiet splash"'
+    regexp: '^GRUB_CMDLINE_LINUX_DEFAULT='
+  - file: /etc/sysctl.conf
+    content: 'net.ipv6.conf.all.disable_ipv6 = 1'
+    regexp: None
+  - file: /etc/hostname
+    content: "{{ ansible_distribution | lower + '-' + ansible_distribution_release }}.localdomain"
+    regexp: None
+  - file: /etc/hosts
+    # yamllint disable rule:line-length
+    content: "127.0.1.1 {{ ansible_distribution | lower + '-' + ansible_distribution_release }}.localdomain {{ ansible_distribution | lower + '-' + ansible_distribution_release }}"
+    regexp: None

@@ -1,5 +1,6 @@
 *.raw
 *.vdi
+*.vmdk
 *.iso
 **/.vagrant
 .venv
