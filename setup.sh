@@ -19,13 +19,18 @@ case "$1" in
     create_box.sh "$@"
     ;;
   "download_latest")
-    echo -e "${GREEN}Cleaning old images ...${ENDCOLOR}"
+    echo -e "${GREEN}Cleaning old files ...${ENDCOLOR}"
     rm -f ./ubuntu22.04/*.img
     rm -f ./debian12/*.raw
+    rm -f ./files/vboxtools.iso
     echo -e "${GREEN}Downloading latest ubuntu 22.04 image ...${ENDCOLOR}"
     wget -P ./ubuntu22.04 https://cloud-images.ubuntu.com/releases/22.04/release/ubuntu-22.04-server-cloudimg-amd64.img
     echo -e "${GREEN}Downloading latest debian 12 image ...${ENDCOLOR}"
     wget -P ./debian12 https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.raw
+    guest_tools_latest=$(curl https://download.virtualbox.org/virtualbox/LATEST-STABLE.TXT)
+    echo -e "${GREEN}Downloading latest stable Virtualbox tools ${guest_tools_latest} ...${ENDCOLOR}"
+    wget https://download.virtualbox.org/virtualbox/"${guest_tools_latest}"/VBoxGuestAdditions_"${guest_tools_latest}".iso \
+        -O ./files/vboxtools.iso
     ;;
   "clean")
     shift 1

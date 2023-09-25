@@ -19,6 +19,7 @@ VDI_SIZE_IN_MB="${3:-30000}"
 DISK_VDI="${GIT_ROOT}/${OS}/${OS}.vdi"
 FILES="${GIT_ROOT}/files"
 SCRIPTS="${GIT_ROOT}/scripts"
+GUEST_TOOLS_ISO="${GIT_ROOT}/files/vboxtools.iso"
 
 # Clean up first
 "${SCRIPTS}"/clean_up.sh "$OS"
@@ -68,9 +69,8 @@ echo "Unmounting cloud init iso"
 vboxmanage storageattach "$OS" --storagectl "IDE Controller" \
   --port 0 --device 0 --type dvddrive --forceunmount --medium emptydrive
 echo "Attaching Guest Tools"
-tools_iso=$(vboxmanage list dvds | grep -B3 'VBoxGuestAdditions.iso' | head -n1 | awk '{printf $2}')
 vboxmanage storageattach "$OS" --storagectl "IDE Controller" \
-  --port 0 --device 0 --type dvddrive --medium "$tools_iso"
+  --port 0 --device 0 --type dvddrive --medium "$GUEST_TOOLS_ISO"
 
 echo
 echo "Machine successfully provisioned!"
