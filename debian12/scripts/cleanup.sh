@@ -19,7 +19,7 @@ systemctl --quiet is-active apt-daily.service && systemctl stop apt-daily.servic
 systemctl --quiet is-active apt-daily-upgrade.timer && systemctl stop apt-daily-upgrade.timer
 systemctl --quiet is-active apt-daily-upgrade.service && systemctl stop apt-daily-upgrade.service
 
-# Remove cloud init packages.
+# Remove unneeded packages.
 dpkg -l cloud-init &>/dev/null && apt-get --assume-yes purge cloud-init
 
 # Cleanup unused packages.

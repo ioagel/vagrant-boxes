@@ -23,7 +23,7 @@ systemctl --quiet is-active apt-daily-upgrade.service && systemctl stop apt-dail
 systemctl --quiet is-active unattended-upgrades.service && systemctl stop unattended-upgrades.service
 systemctl --quiet is-active update-notifier-donwload.service && systemctl stop update-notifier-donwload.service
 
-# Remove cloud init packages.
+# Remove unneeded packages.
 dpkg -l eatmydata &>/dev/null && apt-get --assume-yes purge eatmydata
 dpkg -l libeatmydata1 &>/dev/null && apt-get --assume-yes purge libeatmydata1
 dpkg -l cloud-init &>/dev/null && apt-get --assume-yes purge cloud-init

@@ -4,3 +4,4 @@ network:
     eth0:
       link-local: [ipv4]
       dhcp4: true
+      dhcp6: false

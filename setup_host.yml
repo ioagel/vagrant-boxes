@@ -68,6 +68,7 @@
     - name: Install packages
       apt:
         name:
+          - chrony
           - git
           - rsync
           - wget

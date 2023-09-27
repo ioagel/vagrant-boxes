@@ -43,7 +43,7 @@ vboxmanage modifyvm "$OS" --cpus 2 --memory 2048 --vram 16 --graphicscontroller=
   --usb-ehci=off --usb-ohci=off --usb-xhci=off \
   --audio-enabled=off \
   --uart1 off \
-  --nic-type1 virtio --nic1 nat --natpf1 "guestssh,tcp,,$SSH_PORT,,22" \
+  --nic1 nat --natpf1 "guestssh,tcp,,$SSH_PORT,,22" \
   --boot1 disk --boot2 dvd --boot3 none --boot4 none
 vboxmanage storagectl "$OS" --name "SATA Controller" --add sata --bootable on --portcount 1
 vboxmanage storageattach "$OS" --storagectl "SATA Controller" \
@@ -71,6 +71,10 @@ vboxmanage storageattach "$OS" --storagectl "IDE Controller" \
 echo "Attaching Guest Tools"
 vboxmanage storageattach "$OS" --storagectl "IDE Controller" \
   --port 0 --device 0 --type dvddrive --medium "$GUEST_TOOLS_ISO"
+
+# disable guest-host time syncing through Guest Tools to prevent time drift in vms
+echo "Disabling guest - host time syncing through Guest Tools..."
+vboxmanage setextradata "${OS}" "VBoxInternal/Devices/VMMDev/0/Config/GetHostTimeDisabled" 1
 
 echo
 echo "Machine successfully provisioned!"
