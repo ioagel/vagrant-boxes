@@ -16,3 +16,7 @@ file_configuration:
     # yamllint disable rule:line-length
     content: "127.0.1.1 {{ ansible_distribution | lower + '-' + ansible_distribution_release }}.localdomain {{ ansible_distribution | lower + '-' + ansible_distribution_release }}"
     regexp: None
+  # fix clock skewing when suspending vms
+  - file: /etc/chrony/chrony.conf
+    content: 'makestep 1 -1'
+    regexp: '^makestep'

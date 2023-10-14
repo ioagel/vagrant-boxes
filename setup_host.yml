@@ -8,13 +8,33 @@
   gather_facts: yes
 
   tasks:
+    - name: Get the version of the running kernel
+      command: uname -r
+      register: uname
+      changed_when: false
+
+    - name: Install packages
+      apt:
+        name:
+          - chrony
+          - git
+          - rsync
+          - wget
+          - net-tools
+          - bind9-dnsutils
+          - build-essential
+          - dkms
+          - "linux-headers-{{ uname.stdout }}"
+        state: present
+        update_cache: true
+
     - name: Create vagrant user
       user:
         name: vagrant
         shell: /bin/bash
         # password: vagrant
         # yamllint disable rule:line-length
-        password: '$6$wkhQhItofDV4N5e0$4naqH2UiDOEfqScSmTfUBA7FWfioJ7XKK1aTC9SUfQ10tzjH.l7Xzaf1zLO3eEQf7PI21YVUgJ/c0etUPK4Vm0'
+        password: "$6$wkhQhItofDV4N5e0$4naqH2UiDOEfqScSmTfUBA7FWfioJ7XKK1aTC9SUfQ10tzjH.l7Xzaf1zLO3eEQf7PI21YVUgJ/c0etUPK4Vm0"
 
     - name: Add vagrant user to sudoers
       community.general.sudoers:
@@ -59,26 +79,6 @@
         src: ./files/netplan.yml
         dest: /etc/netplan/01-netcfg.yaml
         mode: 0600
-
-    - name: Get the version of the running kernel
-      command: uname -r
-      register: uname
-      changed_when: false
-
-    - name: Install packages
-      apt:
-        name:
-          - chrony
-          - git
-          - rsync
-          - wget
-          - net-tools
-          - bind9-dnsutils
-          - build-essential
-          - dkms
-          - "linux-headers-{{ uname.stdout }}"
-        state: present
-        update_cache: true
 
     - name: Check if guest tools are already installed
       stat:
