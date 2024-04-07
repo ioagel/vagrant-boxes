@@ -11,3 +11,4 @@
 *.box
 *.img
 ansible.log
+.stignore
