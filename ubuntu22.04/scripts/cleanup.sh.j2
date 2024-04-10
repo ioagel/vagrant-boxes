@@ -27,7 +27,10 @@ systemctl --quiet is-active update-notifier-donwload.service && systemctl stop u
 dpkg -l eatmydata &>/dev/null && apt-get --assume-yes purge eatmydata
 dpkg -l libeatmydata1 &>/dev/null && apt-get --assume-yes purge libeatmydata1
 dpkg -l cloud-init &>/dev/null && apt-get --assume-yes purge cloud-init
+{% if remove_snapd %}
 dpkg -l snapd &>/dev/null && apt-get --assume-yes purge snapd
+[ -d /var/cache/snapd/ ] && rm --recursive --force /var/cache/snapd/
+{% endif %}
 
 # Cleanup unused packages.
 apt-get --assume-yes autoremove; error
@@ -40,7 +43,6 @@ apt-get --assume-yes purge; error
 # Remove leftover files/directories.
 [ -d /etc/cloud/ ] && rm --recursive --force /etc/cloud/
 [ -d /var/lib/cloud/ ] && rm --recursive --force /var/lib/cloud/
-[ -d /var/cache/snapd/ ] && rm --recursive --force /var/cache/snapd/
 
 # Remove log files.
 [ -d /var/log/dist-upgrade/ ] && rm --recursive --force /var/log/dist-upgrade/

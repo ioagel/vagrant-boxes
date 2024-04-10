@@ -2,8 +2,8 @@
 
 set -e
 
-if [ "$#" -ne 2 ]; then
-  echo "2 arguments are required in this order (max 3): <OS dir> <image> [OPTIONAL: <size of vdi image in MB>]"
+if [ "$#" -lt 2 ]; then
+  echo "2 arguments are required in this order (max 4): <OS dir> <image> [OPTIONAL: <size of vdi image in MB>, <size of second disk in MB>]"
   exit 1
 fi
 
@@ -18,6 +18,7 @@ DISK_RAW="$DISK_IMG"
 VDI_SIZE_IN_MB="${3:-30720}" # default 30GB
 DISK_VDI="${GIT_ROOT}/${OS}/${OS}.vdi"
 SECOND_DISK_VDI="${GIT_ROOT}/${OS}/data.vdi"
+SECOND_DISK_VDI_SIZE="${4:-51200}" # default 50GB
 FILES="${GIT_ROOT}/files"
 SCRIPTS="${GIT_ROOT}/scripts"
 GUEST_TOOLS_ISO="${GIT_ROOT}/files/vboxtools.iso"
@@ -29,8 +30,7 @@ GUEST_TOOLS_ISO="${GIT_ROOT}/files/vboxtools.iso"
 cloud-localds "${FILES}/cloud-init.iso" "${FILES}/user-data"
 
 # Convert img to raw if Ubuntu
-if echo "$OS" | grep -q ubuntu
-then
+if echo "$OS" | grep -q ubuntu; then
   DISK_RAW="${DISK_IMG%.img}.raw"
   qemu-img convert -O raw "$DISK_IMG" "$DISK_RAW"
 fi
@@ -39,7 +39,7 @@ vboxmanage convertfromraw "$DISK_RAW" "$DISK_VDI"
 vboxmanage modifymedium disk "$DISK_VDI" --resize "$VDI_SIZE_IN_MB"
 
 # Create a second hard disk of 50Gb to be used for Ceph or any other storage
-vboxmanage createmedium --filename "$SECOND_DISK_VDI" --size 51200 --format VDI
+vboxmanage createmedium --filename "$SECOND_DISK_VDI" --size "$SECOND_DISK_VDI_SIZE" --format VDI
 
 # Create VM
 vboxmanage createvm --name "$OS" --ostype "$OS_TYPE" --register
@@ -66,8 +66,7 @@ vboxmanage startvm "$OS" --type headless
 ssh-keygen -R [localhost]:"$SSH_PORT" >/dev/null 2>&1
 
 # Wait till machine is ready
-until ssh -o "StrictHostKeyChecking no" -i "${FILES}/id_rsa.devel" -p "$SSH_PORT" root@localhost 2> /dev/null 'uptime'
-do
+until ssh -o "StrictHostKeyChecking no" -i "${FILES}/id_rsa.devel" -p "$SSH_PORT" root@localhost 'uptime' 2>/dev/null; do
   sleep 2
 done
 

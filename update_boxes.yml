@@ -38,7 +38,6 @@
     - name: Check if a reboot is needed on all servers
       stat:
         path: /var/run/reboot-required
-        get_md5: false # Algorithm to determine checksum of file
       # Save a result in, and we are going to use it as follows to reboot the box
       register: reboot_required_file
 

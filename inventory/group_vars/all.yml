@@ -20,3 +20,6 @@ file_configuration:
   - file: /etc/chrony/chrony.conf
     content: 'makestep 1 -1'
     regexp: '^makestep'
+
+# boolean flag to remove snapd, by default we keep snapd
+remove_snapd: false

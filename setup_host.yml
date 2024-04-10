@@ -110,8 +110,8 @@
       when: not vbox_tools_installed.stat.exists
 
     - name: Copy scripts
-      copy:
-        src: "{{ inventory_hostname }}/scripts/{{ item }}"
+      template:
+        src: "{{ inventory_hostname }}/scripts/{{ item }}.j2"
         dest: "/root/{{ item }}"
         mode: 0755
       loop:
@@ -133,7 +133,7 @@
         cat /dev/null > .ssh/authorized_keys
         rm -f *.sh
         rm -rf .ansible/
-        rm -rf snap/
+        {{ 'rm -rf snap/' if remove_snapd else '' }}
         history -c && history -w
       args:
         executable: /bin/bash
