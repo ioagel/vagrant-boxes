@@ -15,8 +15,9 @@ OS="$1"
 
 DISK_IMG="$2"
 DISK_RAW="$DISK_IMG"
-VDI_SIZE_IN_MB="${3:-30000}"
+VDI_SIZE_IN_MB="${3:-30720}" # default 30GB
 DISK_VDI="${GIT_ROOT}/${OS}/${OS}.vdi"
+SECOND_DISK_VDI="${GIT_ROOT}/${OS}/data.vdi"
 FILES="${GIT_ROOT}/files"
 SCRIPTS="${GIT_ROOT}/scripts"
 GUEST_TOOLS_ISO="${GIT_ROOT}/files/vboxtools.iso"
@@ -37,6 +38,9 @@ fi
 vboxmanage convertfromraw "$DISK_RAW" "$DISK_VDI"
 vboxmanage modifymedium disk "$DISK_VDI" --resize "$VDI_SIZE_IN_MB"
 
+# Create a second hard disk of 50Gb to be used for Ceph or any other storage
+vboxmanage createmedium --filename "$SECOND_DISK_VDI" --size 51200 --format VDI
+
 # Create VM
 vboxmanage createvm --name "$OS" --ostype "$OS_TYPE" --register
 vboxmanage modifyvm "$OS" --cpus 2 --memory 2048 --vram 16 --graphicscontroller=vmsvga \
@@ -45,9 +49,11 @@ vboxmanage modifyvm "$OS" --cpus 2 --memory 2048 --vram 16 --graphicscontroller=
   --uart1 off \
   --nic1 nat --natpf1 "guestssh,tcp,,$SSH_PORT,,22" \
   --boot1 disk --boot2 dvd --boot3 none --boot4 none
-vboxmanage storagectl "$OS" --name "SATA Controller" --add sata --bootable on --portcount 1
+vboxmanage storagectl "$OS" --name "SATA Controller" --add sata --bootable on --portcount 2
 vboxmanage storageattach "$OS" --storagectl "SATA Controller" \
   --port 0 --type hdd --medium "$DISK_VDI"
+vboxmanage storageattach "$OS" --storagectl "SATA Controller" \
+  --port 1 --type hdd --medium "$SECOND_DISK_VDI"
 vboxmanage storagectl "$OS" --name "IDE Controller" --add ide
 vboxmanage storageattach "$OS" --storagectl "IDE Controller" \
   --port 0 --device 0 --type dvddrive --medium "${FILES}/cloud-init.iso"
