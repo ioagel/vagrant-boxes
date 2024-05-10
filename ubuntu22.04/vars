@@ -1,3 +1,8 @@
-BOX_VERSION=20240410.1.0
+BOX_VERSION=20240506.1.0
 OS_TYPE=Ubuntu_64
 SSH_PORT=2501
+# Create the libvirt MAC addresses with the following command:
+# printf '52:54:00:%02x:%02x:%02x' $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256))
+MAC=52:54:00:58:34:e6
+IP_LIBVIRT=192.168.122.200
+DOWNLOADED_IMG=ubuntu-22.04-server-cloudimg-amd64

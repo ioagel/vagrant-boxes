@@ -80,38 +80,41 @@
         dest: /etc/netplan/01-netcfg.yaml
         mode: 0600
 
-    - name: Check if guest tools are already installed
-      stat:
-        path: "/lib/modules/{{ uname.stdout }}/misc/vboxsf.ko"
-      register: vbox_tools_installed
+    - name: VirtualBox Guest Tools
+      when: ansible_virtualization_type == 'virtualbox'
+      block:
+        - name: Check if guest tools are already installed
+          stat:
+            path: "/lib/modules/{{ uname.stdout }}/misc/vboxsf.ko"
+          register: vbox_tools_installed
 
-    - name: Mount Guest tools iso
-      ansible.posix.mount:
-        path: /mnt
-        src: /dev/sr0
-        fstype: iso9660
-        opts: ro
-        state: ephemeral
-      when: not vbox_tools_installed.stat.exists
+        - name: Mount Guest tools iso
+          ansible.posix.mount:
+            path: /mnt
+            src: /dev/sr0
+            fstype: iso9660
+            opts: ro
+            state: ephemeral
+          when: not vbox_tools_installed.stat.exists
 
-    - name: Install Guest tools
-      command: ./VBoxLinuxAdditions.run --nox11
-      args:
-        chdir: /mnt
-      changed_when: true
-      failed_when: guest_tools_installed.rc != 2
-      register: guest_tools_installed
-      when: not vbox_tools_installed.stat.exists
+        - name: Install Guest tools
+          command: ./VBoxLinuxAdditions.run --nox11
+          args:
+            chdir: /mnt
+          changed_when: true
+          failed_when: guest_tools_installed.rc != 2
+          register: guest_tools_installed
+          when: not vbox_tools_installed.stat.exists
 
-    - name: Unmount Guest tools iso
-      ansible.posix.mount:
-        path: /mnt
-        state: unmounted
-      when: not vbox_tools_installed.stat.exists
+        - name: Unmount Guest tools iso
+          ansible.posix.mount:
+            path: /mnt
+            state: unmounted
+          when: not vbox_tools_installed.stat.exists
 
     - name: Copy scripts
       template:
-        src: "{{ inventory_hostname }}/scripts/{{ item }}.j2"
+        src: "{{ host_folder }}/scripts/{{ item }}.j2"
         dest: "/root/{{ item }}"
         mode: 0755
       loop:

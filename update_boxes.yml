@@ -7,7 +7,7 @@
   tasks:
     - name: Copy apt script
       copy:
-        src: "{{ inventory_hostname }}/scripts/apt.sh"
+        src: "{{ host_folder }}/scripts/apt.sh"
         dest: /root/apt.sh
         mode: 0755
 

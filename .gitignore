@@ -12,3 +12,5 @@
 *.img
 ansible.log
 .stignore
+*.qcow2
+/_tmp_package/
